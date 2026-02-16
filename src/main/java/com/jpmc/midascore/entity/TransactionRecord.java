@@ -12,6 +12,9 @@ public class TransactionRecord {
     @Column(nullable = false)
     private float amount;
 
+    @Column(nullable = false)
+    private float incentive;
+
     @ManyToOne
     @JoinColumn(name = "sender_id", nullable = false)
     private UserRecord sender;
@@ -24,11 +27,21 @@ public class TransactionRecord {
     protected TransactionRecord() {
     }
 
-    // Constructor for creating new transaction records
+      // Constructor for creating new transaction records
     public TransactionRecord(UserRecord sender, UserRecord recipient, float amount) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
+        this.incentive = 0.0f;
+    }
+
+
+    // Constructor for creating new transaction records
+    public TransactionRecord(UserRecord sender, UserRecord recipient, float amount, float incentive) {
+        this.sender = sender;
+        this.recipient = recipient;
+        this.amount = amount;
+        this.incentive = incentive;
     }
 
     // Getters
@@ -38,6 +51,10 @@ public class TransactionRecord {
 
     public float getAmount() {
         return amount;
+    }
+
+    public float getIncentive() {
+        return incentive;
     }
 
     public UserRecord getSender() {
@@ -53,6 +70,10 @@ public class TransactionRecord {
         this.amount = amount;
     }
 
+    public void setIncentive(float incentive) {
+        this.incentive = incentive;
+    }
+
     public void setSender(UserRecord sender) {
         this.sender = sender;
     }
@@ -63,10 +84,10 @@ public class TransactionRecord {
 
     @Override
     public String toString() {
-        return String.format("TransactionRecord[id=%d, sender=%s, recipient=%s, amount=%.2f]",
+        return String.format("TransactionRecord[id=%d, sender=%s, recipient=%s, amount=%.2f, incentive=%.2f]",
                 id,
                 sender != null ? sender.getName() : "null",
                 recipient != null ? recipient.getName() : "null",
-                amount);
+                amount, incentive);
     }
 }

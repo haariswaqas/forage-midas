@@ -2,6 +2,7 @@ package com.jpmc.midascore.service;
 
 import com.jpmc.midascore.entity.TransactionRecord;
 import com.jpmc.midascore.entity.UserRecord;
+import com.jpmc.midascore.foundation.Incentive;
 import com.jpmc.midascore.foundation.Transaction;
 import com.jpmc.midascore.repository.TransactionRecordRepository;
 import com.jpmc.midascore.repository.UserRepository;
@@ -17,11 +18,14 @@ public class TransactionProcessor {
 
     private final UserRepository userRepository;
     private final TransactionRecordRepository transactionRecordRepository;
+    private final IncentiveClient incentiveClient;
 
     public TransactionProcessor(UserRepository userRepository,
-                                TransactionRecordRepository transactionRecordRepository) {
+                                TransactionRecordRepository transactionRecordRepository, 
+                                IncentiveClient incentiveClient) {
         this.userRepository = userRepository;
         this.transactionRecordRepository = transactionRecordRepository;
+        this.incentiveClient = incentiveClient;
     }
 
     @Transactional
@@ -55,16 +59,23 @@ public class TransactionProcessor {
                 recipient.getName(), recipient.getBalance(),
                 transaction.getAmount());
 
-        // Step 4: Update balances
+
+        // Step 4: Get incentive from external API (NEW for Task 4)
+        Incentive incentive = incentiveClient.getIncentive(transaction);
+        float incentiveAmount = incentive.getAmount();
+        logger.info("Incentive received: {}", incentiveAmount);
+
+
+        // Step 5: Update balances
         sender.setBalance(sender.getBalance() - transaction.getAmount());
-        recipient.setBalance(recipient.getBalance() + transaction.getAmount());
+        recipient.setBalance(recipient.getBalance() + transaction.getAmount() + incentiveAmount);
 
         // Step 5: Save updated user records
         userRepository.save(sender);
         userRepository.save(recipient);
 
         // Step 6: Create and save transaction record
-        TransactionRecord record = new TransactionRecord(sender, recipient, transaction.getAmount());
+        TransactionRecord record = new TransactionRecord(sender, recipient, transaction.getAmount(), incentiveAmount);
         transactionRecordRepository.save(record);
 
         logger.info("Transaction processed successfully. New balances - {}: {}, {}: {}",
